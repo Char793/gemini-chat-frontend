@@ -2,7 +2,7 @@ const chatBox = document.getElementById("chat-box");
 const userInput = document.getElementById("user-input");
 const sendBtn = document.getElementById("send-btn");
 
-const BACKEND_URL = "https://flaskgeminirag1service-850366135638.asia-northeast1.run.app"; // 👈 replace this
+const BACKEND_URL = "https://flaskgeminirag1service-850366135638.asia-northeast1.run.app/chat"; // 👈 replace this
 
 function addMessage(text, sender) {
   const msg = document.createElement("div");
