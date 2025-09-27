@@ -100,3 +100,16 @@ button {
 button:hover {
   background: #0a7c6f;
 }
+
+/* Better spacing for multi-line bot messages */
+.bot p {
+    /* Resetting the default browser margin for p tags */
+    margin: 4px 0; 
+}
+
+/* Ensure long Japanese names wrap correctly */
+.message {
+    /* Standard property for better wrapping control */
+    word-break: break-word; 
+    /* ... (rest of .message styles) ... */
+}
