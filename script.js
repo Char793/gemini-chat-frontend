@@ -10,8 +10,22 @@ let currentSessionId = null;
 function addMessage(text, sender) {
   const msg = document.createElement("div");
   msg.classList.add("message", sender);
-  // Optional: Replace raw newline characters (\n) with <br> for better HTML display
-  msg.innerHTML = text.replace(/\n/g, '<br>'); 
+  
+  if (sender === "bot") {
+    // 1. Replace raw newlines (\n) with HTML line breaks (<br>)
+    let formattedText = text.replace(/\n/g, '<br>');
+    
+    // 2. Identify and wrap the suggested list items in a list structure
+    // This targets lines starting with (1), (2), etc., which is what we asked the model to output.
+    // It creates a basic structure for the list, though the line breaks handle most of the visual formatting.
+    formattedText = formattedText.replace(/(\(\d+\) [^<]+)/g, '<p style="margin: 4px 0;">$1</p>');
+    
+    msg.innerHTML = formattedText;
+  } else {
+    // User messages are plain text
+    msg.textContent = text;
+  }
+  
   chatBox.appendChild(msg);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
