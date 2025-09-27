@@ -4,10 +4,14 @@ const sendBtn = document.getElementById("send-btn");
 
 const BACKEND_URL = "https://flaskgeminirag1service-850366135638.asia-northeast1.run.app/chat"; // 👈 replace this
 
+// 💡 New variable to store the conversation session ID
+let currentSessionId = null; 
+
 function addMessage(text, sender) {
   const msg = document.createElement("div");
   msg.classList.add("message", sender);
-  msg.textContent = text;
+  // Optional: Replace raw newline characters (\n) with <br> for better HTML display
+  msg.innerHTML = text.replace(/\n/g, '<br>'); 
   chatBox.appendChild(msg);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
@@ -19,19 +23,36 @@ async function sendMessage() {
   addMessage(message, "user");
   userInput.value = "";
 
+  // 💡 Prepare the request body with the current message and session ID
+  const requestBody = {
+    message: message,
+    // Add the session_id to the payload. It will be null on the first call.
+    session_id: currentSessionId 
+  };
+
   try {
     const res = await fetch(BACKEND_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message }),
+      body: JSON.stringify(requestBody), // Send the updated body
     });
 
-    if (!res.ok) throw new Error("Network error");
+    if (!res.ok) throw new Error("Network error or server returned error status");
+    
     const data = await res.json();
+    
+    // 💡 Crucial update: Store the session_id returned by the server
+    // This handles both the initial creation and subsequent updates
+    if (data.session_id) {
+        currentSessionId = data.session_id;
+        console.log("Session ID updated:", currentSessionId);
+    }
+    
     addMessage(data.response || "No response", "bot");
+
   } catch (err) {
-    console.error(err);
-    addMessage("Error: Could not connect to server.", "bot");
+    console.error("Fetch Error:", err);
+    addMessage("Error: Could not connect to server or process response. Check the console for details.", "bot");
   }
 }
 
