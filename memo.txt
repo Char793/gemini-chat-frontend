@@ -1,0 +1,154 @@
+git clone https://github.com/your-username/flask-gpt-chatbot-template.git
+cd flask-gpt-chatbot-template
+
+0 — Prerequisites (local machine)
+## Install & auth Google Cloud SDK (gcloud).
+
+curl https://sdk.cloud.google.com | bash
+exec -l $SHELL
+gcloud init
+
+
+2 — Enable required Google Cloud APIs
+## Run (replace PROJECT_ID and REGION as needed):
+gcloud config set project PROJECT_ID
+gcloud services enable run.googleapis.com \
+    generativelanguage.googleapis.com \
+    secretmanager.googleapis.com \
+    cloudbuild.googleapis.com
+
+
+3 — Create & secure your GEMINI API key
+# create secret (replace YOUR_API_KEY)
+printf "%s" "YOUR_API_KEY" | gcloud secrets create gemini-api-key --data-file=- --replication-policy="automatic"
+(You can update with gcloud secrets versions add gemini-api-key --data-file=...)
+
+
+4 — Deploy to Cloud Run (two ways)
+## A — Deploy from source (Cloud Build builds container automatically)
+This is the easiest flow if you have the Dockerfile and project folder:
+gcloud run deploy flaskgeminirag1service(service_name) \
+  --source . \
+  --region asia-northeast1 \
+###  --allow-unauthenticated
+
+(Deploying from source requires an Artifact Registry Docker repository to store built containers. A 
+repository named [cloud-run-source-deploy] in region [asia-northeast1] will be created.)
+(Logs are available at [https://console.cloud.google.com/cloud-build/builds;reg
+  ion=asia-northeast1/23990efc-942d-4b55-951e-0c341a6073c2?project=850366135638])
+(Service [flaskgeminirag1service] revision [flaskgeminirag1service-00002-xf5] has been deployed and is serving 100 percent of traffic.
+Service URL: https://flaskgeminirag1service-850366135638.asia-northeast1.run.app)
+
+Add environment variable (simple, less secure)
+If you want to pass the API key directly (quick test), add --set-env-vars:
+gcloud run deploy flaskgeminirag1service(SERVICE_NAME) \
+  --source . \
+  --region asia-northeast1 \
+  --allow-unauthenticated \
+  --set-env-vars GEMINI_API_KEY="YOUR_API_KEY",GEMINI_MODEL="gemini-1.3B"
+
+Or: Use Secret Manager with Cloud Run (recommended)
+Ensure your secret exists (gemini-api-key) as shown above.
+Deploy and expose secret as an env var to the service:
+gcloud run deploy flaskgeminirag1service(SERVICE_NAME) \
+  --source . \
+  --region asia-northeast1 \
+  --allow-unauthenticated \
+  --set-secrets "GEMINI_API_KEY=gemini-api-key:latest" \
+  --update-secrets "GEMINI_API_KEY=gemini-api-key:latest"
+
+
+5 — CORS (allow GitHub Pages frontend to call Cloud Run)
+Install flask-cors in requirements.txt and add CORS(app) in app.py 
+(you can restrict origins with CORS(app, origins=["https://your-github-username.github.io"])) 
+so the browser will permit cross-origin fetches.
+#Done already without restriction
+from flask_cors import CORS
+CORS(app, origins=["https://your-github-username.github.io"])
+
+
+
+
+NEWNEWNEWNEW
+
+echo -n "YOUR_GEMINI_API_KEY" | gcloud secrets create gemini-api-key --data-file=-
+
+
+#You need to give that account the Secret Manager Secret Accessor role.
+#Run this command (replace with your project number if needed):
+gcloud secrets add-iam-policy-binding gemini-api-key \
+  --member="serviceAccount:850366135638-compute@developer.gserviceaccount.com" \
+  --role="roles/secretmanager.secretAccessor"
+
+#Confirm the permission
+gcloud secrets get-iam-policy gemini-api-key
+
+
+
+### for deploy and update
+gcloud run deploy flaskgeminirag1service \
+  --region asia-northeast1 \
+  --source . \
+  --set-secrets GEMINI_API_KEY=gemini-api-key:latest \
+  --allow-unauthenticated
+
+
+###Check what env vars exist:
+gcloud run services describe flaskgeminirag1service \
+  --region asia-northeast1 \
+  --format="yaml(spec.template.spec.containers[0].env)"
+
+
+
+
+### 指定した環境変数のみ削除する（カンマ区切りで複数指定も可能）
+###$ gcloud run services update <サービス名> \
+###  --remove-env-vars key1
+### 全ての環境変数を削除する
+###$ gcloud run services update <サービス名> \
+###  --clear-env-vars
+
+
+curl https://flaskgeminirag1service-850366135638.asia-northeast1.run.app/
+# Should return: ✅ Service is running
+
+
+curl -X POST https://flaskgeminirag1service-850366135638.asia-northeast1.run.app/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message":"Tell me about Product X"}'
+
+
+##Delete the service
+##gcloud run services delete flaskgeminirag1service \
+##  --region asia-northeast1
+
+
+export GEMINI_API_KEY="your_api_key_here"
+curl http://127.0.0.1:8080/
+
+curl http://127.0.0.1:8080/test-gemini
+
+curl -X POST http://127.0.0.1:8080/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message":"Tell me about Product X"}'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
